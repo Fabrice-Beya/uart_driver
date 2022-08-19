@@ -9,6 +9,7 @@
 #define UART_H_
 
 #include "stm32f3xx.h"
+#include <stdio.h>
 
 #define ENABLE 						(|=)
 #define DISABLE						(&=~)
@@ -47,5 +48,8 @@
 
 
 void uart_init(void);
+int uart_write(int ch);
+int uart_read(void);
+void test_uart(void);
 
 #endif /* UART_H_ */

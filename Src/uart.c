@@ -78,9 +78,6 @@ void configure_gpio(void)
 	GPIOA->AFR[0] &= ~GPIOA3_AF_3;
 }
 
-
-
-
 /*
  *	Configure UART 2
  *	Set baud rate i.e the transfer rate to 115200
@@ -134,6 +131,66 @@ void configure_baudrate_9600()
 uint16_t compute_baud_rate(uint32_t peripheral_clock, uint32_t baudrate)
 {
 	return ((peripheral_clock + (baudrate/2U))/baudrate);
+}
+
+int uart_write(int ch)
+{
+	// check if TX register buffer is empty
+	int tx_register = USART2->TDR;
+
+	while(tx_register != 0x00);
+
+	// write to the TX data register
+	USART2->TDR = (ch & 0xFF);
+
+	return ch;
+}
+
+int uart_read()
+{
+	// check if the RX register contain data
+	int rx_register = USART2->RDR;
+
+	while(rx_register == 0x00);
+
+	int read_value = USART2->RDR;
+
+	return read_value;
+}
+
+int __io_putchar(int ch)
+{
+	return uart_write(ch);
+}
+
+int __io_getchar()
+{
+	int val;
+	val = uart_read();
+
+	if (val == '\r') {
+		uart_write(val);
+		val = '\n';
+	}
+
+	uart_write(val);
+
+	return val;
+}
+
+void test_uart(void)
+{
+	int val;
+	char* str;
+	printf("Please enter a valid number: ");
+	scanf("%d", &val);
+	printf("The number entered is: %d\r\n", val);
+	printf("Please type a character string: ");
+	gets(str);
+	printf("The character string entered: ");
+	puts(str);
+	printf("\r\n");
+
 }
 
 

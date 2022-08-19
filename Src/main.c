@@ -8,8 +8,15 @@
 *
 **/
 
+#include "uart.h"
 
 int main()
 {
+	uart_init();
+	uart_test();
+
+	while(1){
+
+	}
 	return 0;
 }
