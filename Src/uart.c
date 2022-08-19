@@ -28,6 +28,8 @@ void uart_init(void)
 	enable_uart_clock();
 	configure_gpio();
 	confgiure_uart();
+
+	setvbuf( stdin, NULL, _IONBF, 0 );
 }
 
 /*
@@ -66,7 +68,6 @@ void configure_gpio(void)
 	GPIOA->MODER &= ~GPIOA3_MODE_0;
 	GPIOA->MODER |= GPIOA3_MODE_1;
 
-
 	GPIOA->AFR[0] |= GPIOA2_AF_0;
 	GPIOA->AFR[0] |= GPIOA2_AF_1;
 	GPIOA->AFR[0] |= GPIOA2_AF_2;
@@ -82,6 +83,7 @@ void configure_gpio(void)
  *	Configure UART 2
  *	Set baud rate i.e the transfer rate to 115200
  *	Enable TX and RX mode in the control registers
+ *	Set the word length to 8 bits
  *	Set the data size to be 8bits
  *	Set number of stop bits to 1: STOP[1:0]
  *	Disable hardware flow control
@@ -94,6 +96,9 @@ void confgiure_uart(void)
 	USART2->CR1 |= UART2_TX_EN;
 	USART2->CR1 |= UART2_RX_EN;
 
+	USART2->CR1 &= ~UART2_8BIT_WORD_M0;
+	USART2->CR1 &= ~UART2_8BIT_WORD_M1;
+
 	USART2->CR2 &= ~UART2_STOP_BITS_0;
 	USART2->CR2 &= ~UART2_STOP_BITS_0;
 
@@ -101,7 +106,6 @@ void confgiure_uart(void)
 	USART2->CR3 &= ~UART2_RTS_CTRL;
 
 	USART2->CR1 |= UART2_EN;
-
 }
 
 /*
@@ -135,10 +139,8 @@ uint16_t compute_baud_rate(uint32_t peripheral_clock, uint32_t baudrate)
 
 int uart_write(int ch)
 {
-	// check if TX register buffer is empty
-	int tx_register = USART2->TDR;
 
-	while(tx_register != 0x00);
+	while(!(USART2->ISR & UART2_TX_READY)){}
 
 	// write to the TX data register
 	USART2->TDR = (ch & 0xFF);
@@ -148,47 +150,45 @@ int uart_write(int ch)
 
 int uart_read()
 {
-	// check if the RX register contain data
-	int rx_register = USART2->RDR;
 
-	while(rx_register == 0x00);
+	while(!(USART2->ISR & UART2_RX_READY)){}
 
-	int read_value = USART2->RDR;
-
-	return read_value;
+	return  USART2->RDR;
 }
+
 
 int __io_putchar(int ch)
 {
 	return uart_write(ch);
 }
 
-int __io_getchar()
+int __io_getchar(void)
 {
-	int val;
-	val = uart_read();
+	int c;
+	c = uart_read();
 
-	if (val == '\r') {
-		uart_write(val);
-		val = '\n';
+	if (c == '\r') {
+		uart_write(c);
+		c = '\n';
 	}
 
-	uart_write(val);
+	uart_write(c);
 
-	return val;
+	return c;
 }
 
-void test_uart(void)
+int val;
+char str[80];
+
+void uart_test(void)
 {
-	int val;
-	char* str;
 	printf("Please enter a valid number: ");
 	scanf("%d", &val);
 	printf("The number entered is: %d\r\n", val);
 	printf("Please type a character string: ");
-	gets(str);
+	scanf("%s", str);
 	printf("The character string entered: ");
-	puts(str);
+	printf(str);
 	printf("\r\n");
 
 }

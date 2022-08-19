@@ -44,12 +44,18 @@
 #define UART2_CTS_CTRL				(1U << 9)
 #define UART2_RTS_CTRL				(1U << 10)
 
+#define UART2_TX_READY				(1U << 7)
+#define UART2_RX_READY				(1U << 5)
+
+#define UART2_8BIT_WORD_M0			(1U << 12)
+#define UART2_8BIT_WORD_M1			(1U << 28)
+
 #define UART2_EN					(1U)
 
 
 void uart_init(void);
 int uart_write(int ch);
 int uart_read(void);
-void test_uart(void);
+void uart_test(void);
 
 #endif /* UART_H_ */
